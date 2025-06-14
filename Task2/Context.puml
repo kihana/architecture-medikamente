@@ -1,0 +1,57 @@
+@startuml C4_ContextStandard
+
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person_Ext(patient, "Пациент")
+Person(employee, "Сотрудник", "Ресепшен, Врач", "person2")
+Person(warehouseKeeper, "Сотрудник склада", "", "person2")
+Person(bookkeeper, "Бухгалтер", "", "person2")
+Person(cassier, "Кассир", "", "person2")
+
+System_Ext(laboratoryFront, "Лаборатории", "", "", "", "", "Software System")
+
+System_Boundary(medicamente, "МЕДИКАМЕНТЕ") {
+    System(patientPortal, "Портал для клиентов", "frontend application", "", "", "", "Software System")
+    System(patientEmployee, "Портал для сотрудников", "frontend application", "", "", "", "Software System")
+    System(1cWarehouse, "1C Торговля и склад", "Складская система учета. Работает в режиме БД", "", "", "", "Software System")
+    SystemDb(1cWarehouseDb, "Database для 1C Торговля и склад", "", "", "", "", "PostgreSQL")
+    System(1cAccounting, "1C Бухгалтерия предприятия", "Бухгалтерская система учета. Работает в режиме БД", "", "", "", "Software System")
+    SystemDb(1cAccountingDb, "Database для 1C Бухгалтерия предприятия", "", "", "", "", "PostgreSQL")
+    System(crm, "CRM", "", "", "", "", "Software System")
+    System(kkm, "Контрольно-кассовая машина", "", "", "", "", "Software System")
+    System(paymentGateway, "Платежный шлюз", "", "", "", "", "Software System")
+    System(accessControl, "Сервис доступа", "Модуль управления доступом по ролям (RBAC+ABAC)", "", "", "", "Software System")
+    System(taggingSystem, "Сервис тегирования", "Модуль автоматически проставляет тэги данным", "", "", "", "Software System")
+    System(auditSystem, "Система аудита", "Ведет аудит доступа и отслеживает аномальное поведение в системе", "", "", "", "Software System")
+    System(consentSystem, "Система контроля данных", "Содержит согласия на обработку данных", "", "", "", "Software System")
+    System(laboratoryBack, "API лаборатории", "", "", "", "", "Software System")
+    System(dataLake, "Хранилише данных", "Хранит обезличенные данные для новых ML, BI, AI сервисов ", "", "", "", "Software System")
+}
+
+Rel(patient, patientPortal, "Регистрация/Аутентификация/Авторизация/Запись к специалисту")
+Rel(employee, patientEmployee, "Регистрация/Аутентификация/Авторизация")
+
+Rel(warehouseKeeper, 1cWarehouse, "Учет ТМЦ")
+Rel(1cWarehouse, 1cWarehouseDb, "Запись/чтение данных", "ODBC")
+
+Rel(bookkeeper, 1cAccounting, "Процессинг платежей")
+Rel(1cAccounting, 1cAccountingDb, "Запись/чтение данных", "ODBC")
+
+Rel(patient, cassier, "Оплата")
+Rel(cassier, crm, "Проведение оплаты")
+Rel(crm, kkm, "Оплата через кассу", "REST/HTTPS")
+Rel(patientPortal, crm, "", "REST/HTTPS")
+Rel(patientEmployee, crm, "", "REST/HTTPS")
+Rel(crm, paymentGateway, "Оплата онлайн", "REST/HTTPS")
+
+Rel(crm, dataLake, "Сохранение обезличенных данных", "REST/HTTPS")
+Rel(1cWarehouseDb, dataLake, "Сохранение обезличенных данных", "REST/HTTPS")
+Rel(1cAccountingDb, dataLake, "Сохранение обезличенных данных", "REST/HTTPS")
+Rel(laboratoryBack, dataLake, "Сохранение обезличенных данных", "REST/HTTPS")
+
+Rel(patientPortal, laboratoryBack, "Получение результатов", "REST/HTTPS")
+Rel(patientEmployee, laboratoryBack, "Получение результатов", "REST/HTTPS")
+Rel(laboratoryFront, laboratoryBack, "Интеграция", "REST/HTTPS")
+
+
+@enduml
